@@ -163,7 +163,7 @@ export default function AnimeOpQuest() {
         {status === 'MENU' && (
           <div className="text-center bg-slate-900 border border-slate-800 p-12 rounded-3xl shadow-2xl">
             <Trophy className="w-20 h-20 text-yellow-500 mx-auto mb-6" />
-            <h2 className="text-4xl font-black mb-4">Are you a True Otaku?</h2>
+            <h2 className="text-4xl font-black mb-4">Are you a True Fans?</h2>
             <p className="text-slate-400 mb-8">Guess 50 iconic openings in 3 minutes.</p>
             <button 
               onClick={startGame}
