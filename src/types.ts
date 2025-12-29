@@ -6,14 +6,9 @@ export interface Anime {
   op: string;
 }
 
-/**
- * The possible states the game can be in
- */
 export type GameStatus = 'MENU' | 'PLAYING' | 'FINISHED';
 
-/**
- * Tracks the player's performance during a session
- */
+
 export interface GameStats {
   score: number;
   correct: number;
@@ -21,9 +16,6 @@ export interface GameStats {
   bestStreak: number;
 }
 
-/**
- * Represents an entry in the leaderboard
- */
 export interface LeaderboardEntry {
   name: string;
   score: number;

@@ -1,14 +1,82 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Music, Clock, Trophy, Play, RotateCcw, Zap } from 'lucide-react';
-import { Anime, GameStatus, GameStats } from '@/types';
-import { ANIME_DATABASE } from '@/data/animeData';
+import { Music, Clock, Trophy, Play, RotateCcw, Zap, Volume2, Heart } from 'lucide-react';
+
+// --- TYPES (Integrated) ---
+interface Anime {
+  id: number;
+  name: string;
+  spotifyId: string;
+  op: string;
+}
+
+type GameStatus = 'MENU' | 'PLAYING' | 'FINISHED';
+
+interface GameStats {
+  score: number;
+  correct: number;
+  streak: number;
+  bestStreak: number;
+}
+
+// --- DATABASE (Integrated to avoid import errors) ---
+const ANIME_DATABASE: Anime[] = [
+  { id: 1, name: "Attack on Titan", spotifyId: "6n7AFm3PmEFi1gAF51ahID", op: "Shinzou wo Sasageyo" },
+  { id: 2, name: "Demon Slayer", spotifyId: "5LYLCApbx7fH7xHXWUpjqM", op: "Gurenge" },
+  { id: 3, name: "My Hero Academia", spotifyId: "0v4f4JkNoACiWbvslNUHGO", op: "Peace Sign" },
+  { id: 4, name: "Jujutsu Kaisen", spotifyId: "22VdIch4ekDGwkj6r6KKMn", op: "Kaikai Kitan" },
+  { id: 5, name: "One Piece", spotifyId: "3FHPfwGfx3ykarXqJe8MxG", op: "We Are!" },
+  { id: 6, name: "Naruto", spotifyId: "6RlHCseiYhdEYa7RNFDjY3", op: "Silhouette" },
+  { id: 7, name: "Tokyo Ghoul", spotifyId: "3ee8Jmje8o58oTcuzt1mWH", op: "Unravel" },
+  { id: 8, name: "Sword Art Online", spotifyId: "0WYWjJVdvWJxP5FNLYsEKD", op: "Crossing Field" },
+  { id: 9, name: "Fullmetal Alchemist", spotifyId: "1OVwJTbrubnaCL5z5ZAFDO", op: "Again" },
+  { id: 10, name: "One Punch Man", spotifyId: "6cZwYzfgCD42lHeOL65Iy0", op: "THE HERO!!" },
+  { id: 11, name: "Bleach", spotifyId: "3rWZbuWNiG3lssqvr8wqDw", op: "Asterisk" },
+  { id: 12, name: "Code Geass", spotifyId: "7mvw6D8Rj0T9R5gzTpNEzT", op: "COLORS" },
+  { id: 13, name: "Mob Psycho 100", spotifyId: "2eo84tI1nvfJqCdLGrSk0m", op: "99" },
+  { id: 14, name: "Hunter x Hunter", spotifyId: "6hjUDIdYjEYSNvn0T3eXYS", op: "Departure!" },
+  { id: 15, name: "Death Note", spotifyId: "5GQCCNnhY1Lq1m33IVlqjO", op: "the WORLD" },
+  { id: 16, name: "Steins Gate", spotifyId: "3RIAlhfSMoO9yUYEJMIL9I", op: "Hacking to the Gate" },
+  { id: 17, name: "Cowboy Bebop", spotifyId: "5K7V0JYzxNxiBLly5JwlOe", op: "Tank!" },
+  { id: 18, name: "Fairy Tail", spotifyId: "4jlbZUaEYkJfNrNtJyYRjh", op: "Snow Fairy" },
+  { id: 19, name: "Black Clover", spotifyId: "0woNqGCgLjkEE5PdKxwwl0", op: "Black Rover" },
+  { id: 20, name: "Vinland Saga", spotifyId: "0TbCEkaSWPnSSqj4Xm4v3i", op: "MUKANJYO" },
+  { id: 21, name: "Chainsaw Man", spotifyId: "3mguEjIxJJpcKyfoZYoUvE", op: "KICK BACK" },
+  { id: 22, name: "Spy x Family", spotifyId: "4e8MbLpscP6RAXGJcvqwGu", op: "Mixed Nuts" },
+  { id: 23, name: "Dragon Ball Z", spotifyId: "0EmeFodog0BfCgMzAIvKQp", op: "Cha-La Head-Cha-La" },
+  { id: 24, name: "Neon Genesis Evangelion", spotifyId: "3A5pXbpiLKAYVAGYpHAYvU", op: "A Cruel Angel's Thesis" },
+  { id: 25, name: "Tokyo Revengers", spotifyId: "0I3q5fW5wMDCTMKv26bNXC", op: "Cry Baby" },
+  { id: 26, name: "Fire Force", spotifyId: "2ILBm5rBXiSwVnaDQT2ZFJ", op: "Inferno" },
+  { id: 27, name: "Blue Lock", spotifyId: "0kKLNsM8lW1J5gLDnlYCVt", op: "CHAOS" },
+  { id: 28, name: "Haikyuu!!", spotifyId: "5ygDXis42ncn6kYG14lEVG", op: "Hikari Are" },
+  { id: 29, name: "The Promised Neverland", spotifyId: "0t2yF64GEvkYQsMWHfLvWr", op: "Touch Off" },
+  { id: 30, name: "Re:Zero", spotifyId: "6xGLBu6cZmb4I6aM3xzYqg", op: "Redo" },
+  { id: 31, name: "Dr. Stone", spotifyId: "1qrpoO4qj7flP0jHhGdXPp", op: "Good Morning World!" },
+  { id: 32, name: "Overlord", spotifyId: "7hR06CiPxBpDGIvJHqf8Ft", op: "Clattanoia" },
+  { id: 33, name: "Noragami", spotifyId: "2LQSF3GKMZ5bYGIVqpFUhE", op: "Goya no Machiawase" },
+  { id: 34, name: "Soul Eater", spotifyId: "4YdKGvn2txOAYCDJYTLBN1", op: "Resonance" },
+  { id: 35, name: "Parasyte", spotifyId: "5nTtCOCds6I0PHMNtqelas", op: "Let Me Hear" },
+  { id: 36, name: "Your Lie in April", spotifyId: "2dR5nwXT6NQI2Yd0EDJBsC", op: "Hikaru nara" },
+  { id: 37, name: "Assassination Classroom", spotifyId: "1CdU1hGbqWqUAX7h8ZzYN6", op: "Seishun Satsubatsu-ron" },
+  { id: 38, name: "Made in Abyss", spotifyId: "66FElZQxIKvXFLnuRWx8JA", op: "Deep in Abyss" },
+  { id: 39, name: "Erased", spotifyId: "3aVoxCp9BNL9p8u8Zz1Bte", op: "Re:Re:" },
+  { id: 40, name: "Violet Evergarden", spotifyId: "6EFYTVyiDXJoMnKEcI05e4", op: "Sincerely" },
+  { id: 41, name: "Terror in Resonance", spotifyId: "1HJ2m7mDPJKTZZfePzQlpx", op: "Trigger" },
+  { id: 42, name: "Durarara!!", spotifyId: "6jyGTqHANr0TbYwsRETaXg", op: "Uragiri no Yuuyake" },
+  { id: 43, name: "Bungou Stray Dogs", spotifyId: "2uXq2btzD9VQDLQcSdXRr7", op: "Trash Candy" },
+  { id: 44, name: "The Seven Deadly Sins", spotifyId: "60WWxz6a5qlJQAGlIbqNAX", op: "Netsujou no Spectrum" },
+  { id: 45, name: "Dororo", spotifyId: "5YhFvgQvlcHlH9LnLMFDx4", op: "Kaen" },
+  { id: 46, name: "Fruits Basket", spotifyId: "1ynPFGxYDfxGP9tDPaMR1I", op: "Again" },
+  { id: 47, name: "Toradora!", spotifyId: "0GnNviKpzLrDsGdlWYLVzY", op: "Pre-Parade" },
+  { id: 48, name: "March Comes in Like a Lion", spotifyId: "3P8fzDZfJQHBQfBMSBrJij", op: "Answer" },
+  { id: 49, name: "Kaguya-sama: Love is War", spotifyId: "4qWYLE3M1YEZTJb0qvz4pr", op: "Love Dramatic" },
+  { id: 50, name: "The Rising of the Shield Hero", spotifyId: "2T4YXcWSScWSMx2NSqxuAd", op: "RISE" }
+];
 
 const GAME_TIME = 180; // 3 minutes
 
-const AnimeOpQuest: React.FC = () => {
-  // --- State ---
+export default function AnimeOpQuest() {
   const [status, setStatus] = useState<GameStatus>('MENU');
   const [stats, setStats] = useState<GameStats>({ score: 0, correct: 0, streak: 0, bestStreak: 0 });
   const [timeLeft, setTimeLeft] = useState(GAME_TIME);
@@ -19,7 +87,6 @@ const AnimeOpQuest: React.FC = () => {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
 
-  // --- Game Logic ---
   const generateRound = useCallback(() => {
     const correct = ANIME_DATABASE[Math.floor(Math.random() * ANIME_DATABASE.length)];
     const others = ANIME_DATABASE
@@ -49,34 +116,25 @@ const AnimeOpQuest: React.FC = () => {
     setIsCorrect(correct);
 
     if (correct) {
-      const streakBonus = Math.floor(stats.streak / 3) * 2; // Extra 2 points every 3-streak
-      const pointsEarned = 5 + streakBonus;
-      
+      const points = 5 + (Math.floor(stats.streak / 3) * 2);
       setStats(prev => ({
         ...prev,
-        score: prev.score + pointsEarned,
+        score: prev.score + points,
         correct: prev.correct + 1,
         streak: prev.streak + 1,
         bestStreak: Math.max(prev.bestStreak, prev.streak + 1)
       }));
-
       setTimeout(() => generateRound(), 1200);
     } else {
-      setStats(prev => ({
-        ...prev,
-        score: Math.max(0, prev.score - 3),
-        streak: 0
-      }));
-      // Allow user to try again or show correct answer after a delay
+      setStats(prev => ({ ...prev, score: Math.max(0, prev.score - 3), streak: 0 }));
       setTimeout(() => setSelectedId(null), 1000);
     }
   };
 
-  // --- Timer ---
   useEffect(() => {
-    let timer: number;
+    let timer: NodeJS.Timeout;
     if (status === 'PLAYING' && timeLeft > 0) {
-      timer = window.setInterval(() => setTimeLeft(prev => prev - 1), 1000);
+      timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
     } else if (timeLeft === 0) {
       setStatus('FINISHED');
     }
@@ -84,126 +142,103 @@ const AnimeOpQuest: React.FC = () => {
   }, [status, timeLeft]);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-cyan-500">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-cyan-500 flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-2xl">
         
         {/* Header */}
-        <header className="flex justify-between items-center mb-12">
+        <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-2">
-            <div className="p-2 bg-cyan-500 rounded-lg">
-              <Music className="text-white" />
-            </div>
-            <h1 className="text-2xl font-black tracking-tighter uppercase">Animesh</h1>
+            <Music className="text-cyan-400" />
+            <h1 className="text-xl font-black uppercase tracking-widest">Anime OP Guess</h1>
           </div>
-          
           {status === 'PLAYING' && (
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 bg-slate-900 px-4 py-2 rounded-full border border-slate-800">
-                <Clock className={timeLeft < 30 ? 'text-red-500 animate-pulse' : 'text-cyan-400'} />
-                <span className="font-mono text-xl">{Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</span>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-slate-500 uppercase font-bold">Score</p>
-                <p className="text-2xl font-black text-cyan-400">{stats.score}</p>
-              </div>
+            <div className="flex items-center gap-4 bg-slate-900 px-4 py-2 rounded-full border border-slate-800">
+              <Clock className={timeLeft < 30 ? 'text-red-500 animate-pulse' : 'text-cyan-400'} />
+              <span className="font-mono text-xl">{Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</span>
             </div>
           )}
-        </header>
+        </div>
 
-        {/* Game Area */}
-        <main>
-          {status === 'MENU' && (
-            <div className="text-center space-y-8 py-12">
-              <h2 className="text-6xl font-black mb-4 bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                OPENING QUEST
-              </h2>
-              <p className="text-slate-400 text-lg max-w-md mx-auto">
-                Test your ears. Guess the anime opening from the Spotify snippet.
-              </p>
-              <button 
-                onClick={startGame}
-                className="group relative px-12 py-4 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-full transition-all hover:scale-105 overflow-hidden"
-              >
-                <span className="relative z-10 flex items-center gap-2">
-                  START GAME <Play size={20} fill="currentColor" />
-                </span>
-              </button>
+        {/* Menu */}
+        {status === 'MENU' && (
+          <div className="text-center bg-slate-900 border border-slate-800 p-12 rounded-3xl shadow-2xl">
+            <Trophy className="w-20 h-20 text-yellow-500 mx-auto mb-6" />
+            <h2 className="text-4xl font-black mb-4">Are you a True Otaku?</h2>
+            <p className="text-slate-400 mb-8">Guess 50 iconic openings in 3 minutes.</p>
+            <button 
+              onClick={startGame}
+              className="w-full py-4 bg-cyan-500 hover:bg-cyan-400 text-black font-black rounded-xl transition-transform hover:scale-105"
+            >
+              START QUEST
+            </button>
+          </div>
+        )}
+
+        {/* Game UI */}
+        {status === 'PLAYING' && currentRound && (
+          <div className="space-y-6">
+            <div className="bg-slate-900 p-1 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
+              <iframe
+                title="Spotify"
+                src={`https://open.spotify.com/embed/track/${currentRound.correct.spotifyId}?utm_source=generator&theme=0`}
+                width="100%"
+                height="152"
+                frameBorder="0"
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                className="rounded-xl"
+              />
             </div>
-          )}
 
-          {status === 'PLAYING' && currentRound && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              {/* Spotify Player */}
-              <div className="bg-slate-900 p-1 rounded-3xl border border-slate-800 shadow-2xl overflow-hidden">
-                <iframe
-                  title="Spotify Player"
-                  src={`https://open.spotify.com/embed/track/${currentRound.correct.spotifyId}?utm_source=generator&theme=0`}
-                  width="100%"
-                  height="152"
-                  frameBorder="0"
-                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                  loading="lazy"
-                  className="rounded-2xl"
-                />
-              </div>
-
-              {/* Choices */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {currentRound.choices.map((choice) => (
-                  <button
-                    key={choice.id}
-                    onClick={() => handleAnswer(choice.id)}
-                    disabled={selectedId !== null && isCorrect === true}
-                    className={`
-                      p-6 text-left rounded-2xl border-2 transition-all duration-200 font-bold text-lg
-                      ${selectedId === choice.id 
-                        ? (choice.id === currentRound.correct.id ? 'border-green-500 bg-green-500/10' : 'border-red-500 bg-red-500/10')
-                        : 'border-slate-800 bg-slate-900 hover:border-cyan-500 hover:bg-slate-800'}
-                    `}
-                  >
-                    {choice.name}
-                  </button>
-                ))}
-              </div>
-
-              {/* Streak Indicator */}
-              {stats.streak > 1 && (
-                <div className="flex justify-center">
-                  <div className="flex items-center gap-2 bg-orange-500/20 text-orange-400 px-4 py-1 rounded-full border border-orange-500/30 animate-bounce">
-                    <Zap size={16} fill="currentColor" />
-                    <span className="text-sm font-black">{stats.streak}x STREAK!</span>
-                  </div>
-                </div>
-              )}
+            <div className="grid grid-cols-1 gap-3">
+              {currentRound.choices.map((choice) => (
+                <button
+                  key={choice.id}
+                  onClick={() => handleAnswer(choice.id)}
+                  className={`p-4 text-left rounded-xl border-2 font-bold transition-all
+                    ${selectedId === choice.id 
+                      ? (choice.id === currentRound.correct.id ? 'border-green-500 bg-green-500/10' : 'border-red-500 bg-red-500/10')
+                      : 'border-slate-800 bg-slate-900 hover:border-cyan-500'}
+                  `}
+                >
+                  {choice.name}
+                </button>
+              ))}
             </div>
-          )}
 
-          {status === 'FINISHED' && (
-            <div className="bg-slate-900 rounded-3xl p-12 border border-slate-800 text-center space-y-6">
-              <Trophy size={80} className="mx-auto text-yellow-500" />
-              <h2 className="text-4xl font-black">QUEST COMPLETE</h2>
-              <div className="grid grid-cols-2 gap-4 py-6">
-                <div className="p-4 bg-slate-950 rounded-2xl">
-                  <p className="text-slate-500 text-xs uppercase font-bold">Total Score</p>
-                  <p className="text-4xl font-black text-cyan-400">{stats.score}</p>
-                </div>
-                <div className="p-4 bg-slate-950 rounded-2xl">
-                  <p className="text-slate-500 text-xs uppercase font-bold">Best Streak</p>
-                  <p className="text-4xl font-black text-orange-400">{stats.bestStreak}</p>
+            {stats.streak > 2 && (
+              <div className="flex justify-center animate-bounce">
+                <div className="bg-orange-500 text-black text-xs font-black px-3 py-1 rounded-full flex items-center gap-1">
+                  <Zap size={14} fill="currentColor" /> {stats.streak} STREAK
                 </div>
               </div>
-              <button 
-                onClick={startGame}
-                className="flex items-center gap-2 mx-auto px-8 py-3 bg-white text-black font-bold rounded-full hover:bg-slate-200 transition-colors"
-              >
-                <RotateCcw size={20} /> PLAY AGAIN
-              </button>
+            )}
+          </div>
+        )}
+
+        {/* Results */}
+        {status === 'FINISHED' && (
+          <div className="bg-slate-900 p-10 rounded-3xl border border-slate-800 text-center">
+            <h2 className="text-3xl font-black text-cyan-400 mb-2">TIME EXPIRED!</h2>
+            <div className="text-7xl font-black mb-6">{stats.score}</div>
+            <div className="grid grid-cols-2 gap-4 mb-8">
+              <div className="bg-slate-950 p-4 rounded-xl">
+                <p className="text-xs text-slate-500 uppercase">Correct</p>
+                <p className="text-xl font-bold">{stats.correct}</p>
+              </div>
+              <div className="bg-slate-950 p-4 rounded-xl">
+                <p className="text-xs text-slate-500 uppercase">Best Streak</p>
+                <p className="text-xl font-bold">{stats.bestStreak}</p>
+              </div>
             </div>
-          )}
-        </main>
+            <button 
+              onClick={startGame}
+              className="flex items-center gap-2 mx-auto px-8 py-3 bg-white text-black font-bold rounded-full hover:bg-slate-200"
+            >
+              <RotateCcw size={20} /> TRY AGAIN
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
-};
-
-export default AnimeOpQuest;
+}
