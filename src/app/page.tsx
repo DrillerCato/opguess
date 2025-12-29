@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Music, Clock, Trophy, Play, RotateCcw, Zap } from 'lucide-react';
-import { Anime, GameStatus, GameStats } from './types';
-import { ANIME_DATABASE } from './data/animeData';
+import { Anime, GameStatus, GameStats } from '@/types';
+import { ANIME_DATABASE } from '@/data/animeData';
 
 const GAME_TIME = 180; // 3 minutes
 
