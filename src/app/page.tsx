@@ -1,241 +1,354 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Music, Clock, Trophy, Play, RotateCcw, Zap, Volume2, Heart } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Music, Clock, Trophy, RotateCcw, Zap, Volume2, VolumeX, ListOrdered, Image } from 'lucide-react';
 
-// --- TYPES (Integrated) ---
-interface Anime {
-  id: number;
-  name: string;
-  spotifyId: string;
-  op: string;
-}
+// --- TYPES ---
+interface Anime { id: number; name: string; audioUrl: string; imageUrl: string; }
+interface ScoreEntry { name: string; score: number; date: string; }
+type GameStatus = 'MENU' | 'PLAYING' | 'FINISHED' | 'LEADERBOARD';
 
-type GameStatus = 'MENU' | 'PLAYING' | 'FINISHED';
-
-interface GameStats {
-  score: number;
-  correct: number;
-  streak: number;
-  bestStreak: number;
-}
-
-// --- DATABASE (Integrated to avoid import errors) ---
+// --- DATABASE (FULL 50 SONGS) ---
 const ANIME_DATABASE: Anime[] = [
-  { id: 1, name: "Attack on Titan", spotifyId: "6n7AFm3PmEFi1gAF51ahID", op: "Shinzou wo Sasageyo" },
-  { id: 2, name: "Demon Slayer", spotifyId: "5LYLCApbx7fH7xHXWUpjqM", op: "Gurenge" },
-  { id: 3, name: "My Hero Academia", spotifyId: "0v4f4JkNoACiWbvslNUHGO", op: "Peace Sign" },
-  { id: 4, name: "Jujutsu Kaisen", spotifyId: "22VdIch4ekDGwkj6r6KKMn", op: "Kaikai Kitan" },
-  { id: 5, name: "One Piece", spotifyId: "3FHPfwGfx3ykarXqJe8MxG", op: "We Are!" },
-  { id: 6, name: "Naruto", spotifyId: "6RlHCseiYhdEYa7RNFDjY3", op: "Silhouette" },
-  { id: 7, name: "Tokyo Ghoul", spotifyId: "3ee8Jmje8o58oTcuzt1mWH", op: "Unravel" },
-  { id: 8, name: "Sword Art Online", spotifyId: "0WYWjJVdvWJxP5FNLYsEKD", op: "Crossing Field" },
-  { id: 9, name: "Fullmetal Alchemist", spotifyId: "1OVwJTbrubnaCL5z5ZAFDO", op: "Again" },
-  { id: 10, name: "One Punch Man", spotifyId: "6cZwYzfgCD42lHeOL65Iy0", op: "THE HERO!!" },
-  { id: 11, name: "Bleach", spotifyId: "3rWZbuWNiG3lssqvr8wqDw", op: "Asterisk" },
-  { id: 12, name: "Code Geass", spotifyId: "7mvw6D8Rj0T9R5gzTpNEzT", op: "COLORS" },
-  { id: 13, name: "Mob Psycho 100", spotifyId: "2eo84tI1nvfJqCdLGrSk0m", op: "99" },
-  { id: 14, name: "Hunter x Hunter", spotifyId: "6hjUDIdYjEYSNvn0T3eXYS", op: "Departure!" },
-  { id: 15, name: "Death Note", spotifyId: "5GQCCNnhY1Lq1m33IVlqjO", op: "the WORLD" },
-  { id: 16, name: "Steins Gate", spotifyId: "3RIAlhfSMoO9yUYEJMIL9I", op: "Hacking to the Gate" },
-  { id: 17, name: "Cowboy Bebop", spotifyId: "5K7V0JYzxNxiBLly5JwlOe", op: "Tank!" },
-  { id: 18, name: "Fairy Tail", spotifyId: "4jlbZUaEYkJfNrNtJyYRjh", op: "Snow Fairy" },
-  { id: 19, name: "Black Clover", spotifyId: "0woNqGCgLjkEE5PdKxwwl0", op: "Black Rover" },
-  { id: 20, name: "Vinland Saga", spotifyId: "0TbCEkaSWPnSSqj4Xm4v3i", op: "MUKANJYO" },
-  { id: 21, name: "Chainsaw Man", spotifyId: "3mguEjIxJJpcKyfoZYoUvE", op: "KICK BACK" },
-  { id: 22, name: "Spy x Family", spotifyId: "4e8MbLpscP6RAXGJcvqwGu", op: "Mixed Nuts" },
-  { id: 23, name: "Dragon Ball Z", spotifyId: "0EmeFodog0BfCgMzAIvKQp", op: "Cha-La Head-Cha-La" },
-  { id: 24, name: "Neon Genesis Evangelion", spotifyId: "3A5pXbpiLKAYVAGYpHAYvU", op: "A Cruel Angel's Thesis" },
-  { id: 25, name: "Tokyo Revengers", spotifyId: "0I3q5fW5wMDCTMKv26bNXC", op: "Cry Baby" },
-  { id: 26, name: "Fire Force", spotifyId: "2ILBm5rBXiSwVnaDQT2ZFJ", op: "Inferno" },
-  { id: 27, name: "Blue Lock", spotifyId: "0kKLNsM8lW1J5gLDnlYCVt", op: "CHAOS" },
-  { id: 28, name: "Haikyuu!!", spotifyId: "5ygDXis42ncn6kYG14lEVG", op: "Hikari Are" },
-  { id: 29, name: "The Promised Neverland", spotifyId: "0t2yF64GEvkYQsMWHfLvWr", op: "Touch Off" },
-  { id: 30, name: "Re:Zero", spotifyId: "6xGLBu6cZmb4I6aM3xzYqg", op: "Redo" },
-  { id: 31, name: "Dr. Stone", spotifyId: "1qrpoO4qj7flP0jHhGdXPp", op: "Good Morning World!" },
-  { id: 32, name: "Overlord", spotifyId: "7hR06CiPxBpDGIvJHqf8Ft", op: "Clattanoia" },
-  { id: 33, name: "Noragami", spotifyId: "2LQSF3GKMZ5bYGIVqpFUhE", op: "Goya no Machiawase" },
-  { id: 34, name: "Soul Eater", spotifyId: "4YdKGvn2txOAYCDJYTLBN1", op: "Resonance" },
-  { id: 35, name: "Parasyte", spotifyId: "5nTtCOCds6I0PHMNtqelas", op: "Let Me Hear" },
-  { id: 36, name: "Your Lie in April", spotifyId: "2dR5nwXT6NQI2Yd0EDJBsC", op: "Hikaru nara" },
-  { id: 37, name: "Assassination Classroom", spotifyId: "1CdU1hGbqWqUAX7h8ZzYN6", op: "Seishun Satsubatsu-ron" },
-  { id: 38, name: "Made in Abyss", spotifyId: "66FElZQxIKvXFLnuRWx8JA", op: "Deep in Abyss" },
-  { id: 39, name: "Erased", spotifyId: "3aVoxCp9BNL9p8u8Zz1Bte", op: "Re:Re:" },
-  { id: 40, name: "Violet Evergarden", spotifyId: "6EFYTVyiDXJoMnKEcI05e4", op: "Sincerely" },
-  { id: 41, name: "Terror in Resonance", spotifyId: "1HJ2m7mDPJKTZZfePzQlpx", op: "Trigger" },
-  { id: 42, name: "Durarara!!", spotifyId: "6jyGTqHANr0TbYwsRETaXg", op: "Uragiri no Yuuyake" },
-  { id: 43, name: "Bungou Stray Dogs", spotifyId: "2uXq2btzD9VQDLQcSdXRr7", op: "Trash Candy" },
-  { id: 44, name: "The Seven Deadly Sins", spotifyId: "60WWxz6a5qlJQAGlIbqNAX", op: "Netsujou no Spectrum" },
-  { id: 45, name: "Dororo", spotifyId: "5YhFvgQvlcHlH9LnLMFDx4", op: "Kaen" },
-  { id: 46, name: "Fruits Basket", spotifyId: "1ynPFGxYDfxGP9tDPaMR1I", op: "Again" },
-  { id: 47, name: "Toradora!", spotifyId: "0GnNviKpzLrDsGdlWYLVzY", op: "Pre-Parade" },
-  { id: 48, name: "March Comes in Like a Lion", spotifyId: "3P8fzDZfJQHBQfBMSBrJij", op: "Answer" },
-  { id: 49, name: "Kaguya-sama: Love is War", spotifyId: "4qWYLE3M1YEZTJb0qvz4pr", op: "Love Dramatic" },
-  { id: 50, name: "The Rising of the Shield Hero", spotifyId: "2T4YXcWSScWSMx2NSqxuAd", op: "RISE" }
+  { id: 1, name: "Attack on Titan", audioUrl: "https://v.animethemes.moe/ShingekiNoKyojin-OP1.webm", imageUrl: "/images/anime-1.jpg" },
+  { id: 2, name: "Demon Slayer", audioUrl: "https://v.animethemes.moe/KimetsuNoYaiba-OP1.webm", imageUrl: "/images/anime-2.jpg" },
+  { id: 3, name: "Jujutsu Kaisen", audioUrl: "https://v.animethemes.moe/JujutsuKaisen-OP1.webm", imageUrl: "/images/anime-3.jpg" },
+  { id: 4, name: "One Piece", audioUrl: "https://v.animethemes.moe/OnePiece-OP1.webm", imageUrl: "/images/anime-4.jpg" },
+  { id: 5, name: "Naruto Shippuden", audioUrl: "https://v.animethemes.moe/NarutoShippuden-OP6.webm", imageUrl: "/images/anime-5.jpg" },
+  { id: 6, name: "Tokyo Ghoul", audioUrl: "https://v.animethemes.moe/TokyoGhoul-OP1.webm", imageUrl: "/images/anime-6.jpg" },
+  { id: 7, name: "Fullmetal Alchemist: B", audioUrl: "https://v.animethemes.moe/FullmetalAlchemistBrotherhood-OP1.webm", imageUrl: "/images/anime-7.jpg" },
+  { id: 8, name: "Neon Genesis Evangelion", audioUrl: "https://v.animethemes.moe/NeonGenesisEvangelion-OP1.webm", imageUrl: "/images/anime-8.jpg" },
+  { id: 9, name: "Oshi No Ko", audioUrl: "https://v.animethemes.moe/OshiNoKo-OP1.webm", imageUrl: "/images/anime-9.jpg" },
+  { id: 10, name: "Chainsaw Man", audioUrl: "https://v.animethemes.moe/ChainsawMan-OP1.webm", imageUrl: "/images/anime-10.jpg" },
+  { id: 11, name: "Blue Lock", audioUrl: "https://v.animethemes.moe/BlueLock-OP1.webm", imageUrl: "/images/anime-11.jpg" },
+  { id: 12, name: "Spy x Family", audioUrl: "https://v.animethemes.moe/SpyXFamily-OP1.webm", imageUrl: "/images/anime-12.jpg" },
+  { id: 13, name: "Cyberpunk Edgerunners", audioUrl: "https://v.animethemes.moe/CyberpunkEdgerunners-OP1.webm", imageUrl: "/images/anime-13.jpg" },
+  { id: 14, name: "Death Note", audioUrl: "https://v.animethemes.moe/DeathNote-OP1.webm", imageUrl: "/images/anime-14.jpg" },
+  { id: 15, name: "Hunter x Hunter (2011)", audioUrl: "https://v.animethemes.moe/HunterHunter2011-OP1.webm", imageUrl: "/images/anime-15.jpg" },
+  { id: 16, name: "Bleach", audioUrl: "https://v.animethemes.moe/Bleach-OP1.webm", imageUrl: "/images/anime-16.jpg" },
+  { id: 17, name: "My Hero Academia", audioUrl: "https://v.animethemes.moe/BokuNoHeroAcademia-OP1.webm", imageUrl: "/images/anime-17.jpg" },
+  { id: 18, name: "Black Clover", audioUrl: "https://v.animethemes.moe/BlackClover-OP1.webm", imageUrl: "/images/anime-18.jpg" },
+  { id: 19, name: "Vinland Saga", audioUrl: "https://v.animethemes.moe/VinlandSaga-OP1.webm", imageUrl: "/images/anime-19.jpg" },
+  { id: 20, name: "Haikyuu!!", audioUrl: "https://v.animethemes.moe/Haikyuu-OP1.webm", imageUrl: "/images/anime-20.jpg" },
+  { id: 21, name: "Solo Leveling", audioUrl: "https://v.animethemes.moe/SoloLeveling-OP1.webm", imageUrl: "/images/anime-21.jpg" },
+  { id: 22, name: "Sword Art Online", audioUrl: "https://v.animethemes.moe/SwordArtOnline-OP1.webm", imageUrl: "/images/anime-22.jpg" },
+  { id: 23, name: "One Punch Man", audioUrl: "https://v.animethemes.moe/OnePunchMan-OP1.webm", imageUrl: "/images/anime-23.jpg" },
+  { id: 24, name: "Mob Psycho 100", audioUrl: "https://v.animethemes.moe/MobPsycho100-OP1.webm", imageUrl: "/images/anime-24.jpg" },
+  { id: 25, name: "Steins;Gate", audioUrl: "https://v.animethemes.moe/SteinsGate-OP1.webm", imageUrl: "/images/anime-25.jpg" },
+  { id: 26, name: "Code Geass", audioUrl: "https://v.animethemes.moe/CodeGeass-OP1.webm", imageUrl: "/images/anime-26.jpg" },
+  { id: 27, name: "Cowboy Bebop", audioUrl: "https://v.animethemes.moe/CowboyBebop-OP1.webm", imageUrl: "/images/anime-27.jpg" },
+  { id: 28, name: "Dr. Stone", audioUrl: "https://v.animethemes.moe/DrStone-OP1.webm", imageUrl: "/images/anime-28.jpg" },
+  { id: 29, name: "Fire Force", audioUrl: "https://v.animethemes.moe/EnenNoShoubouitai-OP1.webm", imageUrl: "/images/anime-29.jpg" },
+  { id: 30, name: "Fate/Zero", audioUrl: "https://v.animethemes.moe/FateZero-OP1.webm", imageUrl: "/images/anime-30.jpg" },
+  { id: 31, name: "Frieren", audioUrl: "https://v.animethemes.moe/SousouNoFrieren-OP1.webm", imageUrl: "/images/anime-31.jpg" },
+  { id: 32, name: "Mushoku Tensei", audioUrl: "https://v.animethemes.moe/MushokuTensei-OP1.webm", imageUrl: "/images/anime-32.jpg" },
+  { id: 33, name: "Re:Zero", audioUrl: "https://v.animethemes.moe/ReZero-OP1.webm", imageUrl: "/images/anime-33.jpg" },
+  { id: 34, name: "Kaguya-sama", audioUrl: "https://v.animethemes.moe/KaguyaSamaWaKokurasetai-OP1.webm", imageUrl: "/images/anime-34.jpg" },
+  { id: 35, name: "Your Lie in April", audioUrl: "https://v.animethemes.moe/ShigatsuWaKimiNoUso-OP1.webm", imageUrl: "/images/anime-35.jpg" },
+  { id: 36, name: "A Silent Voice", audioUrl: "https://v.animethemes.moe/KoeNoKatachi-OP1.webm", imageUrl: "/images/anime-36.jpg" },
+  { id: 37, name: "No Game No Life", audioUrl: "https://v.animethemes.moe/NoGameNoLife-OP1.webm", imageUrl: "/images/anime-37.jpg" },
+  { id: 38, name: "Parasyte", audioUrl: "https://v.animethemes.moe/Kiseijuu-OP1.webm", imageUrl: "/images/anime-38.jpg" },
+  { id: 39, name: "Kill la Kill", audioUrl: "https://v.animethemes.moe/KillLaKill-OP1.webm", imageUrl: "/images/anime-39.jpg" },
+  { id: 40, name: "Gurren Lagann", audioUrl: "https://v.animethemes.moe/TengenToppaGurrenLagann-OP1.webm", imageUrl: "/images/anime-40.jpg" },
+  { id: 41, name: "Violet Evergarden", audioUrl: "https://v.animethemes.moe/VioletEvergarden-OP1.webm", imageUrl: "/images/anime-41.jpg" },
+  { id: 42, name: "JoJo Part 1", audioUrl: "https://v.animethemes.moe/JojoNoKimyouNaBouken-OP1.webm", imageUrl: "/images/anime-42.jpg" },
+  { id: 43, name: "Shield Hero", audioUrl: "https://v.animethemes.moe/TateNoYuushaNoNariagari-OP1.webm", imageUrl: "/images/anime-43.jpg" },
+  { id: 44, name: "Dororo", audioUrl: "https://v.animethemes.moe/Dororo-OP1.webm", imageUrl: "/images/anime-44.jpg" },
+  { id: 45, name: "Noragami", audioUrl: "https://v.animethemes.moe/Noragami-OP1.webm", imageUrl: "/images/anime-45.jpg" },
+  { id: 46, name: "Hellsing Ultimate", audioUrl: "https://v.animethemes.moe/HellsingUltimate-OP1.webm", imageUrl: "/images/anime-46.jpg" },
+  { id: 47, name: "Psycho-Pass", audioUrl: "https://v.animethemes.moe/PsychoPass-OP1.webm", imageUrl: "/images/anime-47.jpg" },
+  { id: 48, name: "Samurai Champloo", audioUrl: "https://v.animethemes.moe/SamuraiChamploo-OP1.webm", imageUrl: "/images/anime-48.jpg" },
+  { id: 49, name: "Gintama", audioUrl: "https://v.animethemes.moe/Gintama-OP1.webm", imageUrl: "/images/anime-49.jpg" },
+  { id: 50, name: "Great Teacher Onizuka", audioUrl: "https://v.animethemes.moe/GTO-OP1.webm", imageUrl: "/images/anime-50.jpg" }
 ];
-
-const GAME_TIME = 180; // 3 minutes
 
 export default function AnimeOpQuest() {
   const [status, setStatus] = useState<GameStatus>('MENU');
-  const [stats, setStats] = useState<GameStats>({ score: 0, correct: 0, streak: 0, bestStreak: 0 });
-  const [timeLeft, setTimeLeft] = useState(GAME_TIME);
-  const [currentRound, setCurrentRound] = useState<{
-    correct: Anime;
-    choices: Anime[];
-  } | null>(null);
+  const [stats, setStats] = useState({ score: 0, correct: 0, streak: 0, bestStreak: 0 });
+  const [timeLeft, setTimeLeft] = useState(60);
+  const [currentRound, setCurrentRound] = useState<{ correct: Anime; choices: Anime[] } | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  const [songPool, setSongPool] = useState<Anime[]>([]);
+  const [leaderboard, setLeaderboard] = useState<ScoreEntry[]>([]);
+  const [popScore, setPopScore] = useState<{ id: number; val: number } | null>(null);
+  const [imageError, setImageError] = useState(false);
 
-  const generateRound = useCallback(() => {
-    const correct = ANIME_DATABASE[Math.floor(Math.random() * ANIME_DATABASE.length)];
-    const others = ANIME_DATABASE
-      .filter(a => a.id !== correct.id)
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 3);
-    
-    const choices = [correct, ...others].sort(() => 0.5 - Math.random());
-    
-    setCurrentRound({ correct, choices });
-    setSelectedId(null);
-    setIsCorrect(null);
+  const [volume, setVolume] = useState(0.5);
+  const [isMuted, setIsMuted] = useState(false);
+  
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const correctSfxRef = useRef<HTMLAudioElement | null>(null);
+  const wrongSfxRef = useRef<HTMLAudioElement | null>(null);
+
+  // Volume control
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.volume = isMuted ? 0 : volume;
+  }, [volume, isMuted]);
+
+  // Stop music when game finishes
+  useEffect(() => {
+    if (status === 'FINISHED' && audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+  }, [status]);
+
+  // Load leaderboard from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('anime_leaderboard');
+    if (saved) {
+      try {
+        setLeaderboard(JSON.parse(saved));
+      } catch (e) {
+        console.error('Failed to load leaderboard:', e);
+      }
+    }
   }, []);
 
-  const startGame = () => {
-    setStats({ score: 0, correct: 0, streak: 0, bestStreak: 0 });
-    setTimeLeft(GAME_TIME);
-    setStatus('PLAYING');
-    generateRound();
-  };
-
-  const handleAnswer = (animeId: number) => {
-    if (selectedId !== null || !currentRound) return;
-
-    setSelectedId(animeId);
-    const correct = animeId === currentRound.correct.id;
-    setIsCorrect(correct);
-
-    if (correct) {
-      const points = 5 + (Math.floor(stats.streak / 3) * 2);
-      setStats(prev => ({
-        ...prev,
-        score: prev.score + points,
-        correct: prev.correct + 1,
-        streak: prev.streak + 1,
-        bestStreak: Math.max(prev.bestStreak, prev.streak + 1)
-      }));
-      setTimeout(() => generateRound(), 1200);
-    } else {
-      setStats(prev => ({ ...prev, score: Math.max(0, prev.score - 3), streak: 0 }));
-      setTimeout(() => setSelectedId(null), 1000);
-    }
-  };
-
+  // Timer countdown
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (status === 'PLAYING' && timeLeft > 0) {
-      timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
-    } else if (timeLeft === 0) {
+      timer = setInterval(() => setTimeLeft(v => v - 1), 1000);
+    } else if (timeLeft === 0 && status === 'PLAYING') {
       setStatus('FINISHED');
     }
     return () => clearInterval(timer);
   }, [status, timeLeft]);
 
+  const generateRound = useCallback((currentPool: Anime[]) => {
+    if (currentPool.length === 0) {
+      setStatus('FINISHED');
+      return;
+    }
+    const newPool = [...currentPool];
+    const correctIdx = Math.floor(Math.random() * newPool.length);
+    const correct = newPool.splice(correctIdx, 1)[0];
+    
+    setSongPool(newPool);
+    setImageError(false);
+
+    const others = ANIME_DATABASE
+      .filter(a => a.id !== correct.id)
+      .sort(() => 0.5 - Math.random())
+      .slice(0, 3);
+
+    const choices = [correct, ...others].sort(() => 0.5 - Math.random());
+    setCurrentRound({ correct, choices });
+    setSelectedId(null);
+  }, []);
+
+  const startGame = () => {
+    const shuffled = [...ANIME_DATABASE].sort(() => 0.5 - Math.random());
+    setStats({ score: 0, correct: 0, streak: 0, bestStreak: 0 });
+    setTimeLeft(60);
+    setStatus('PLAYING');
+    generateRound(shuffled);
+  };
+
+  const handleAnswer = (animeId: number) => {
+    if (selectedId !== null || !currentRound) return;
+    setSelectedId(animeId);
+
+    if (animeId === currentRound.correct.id) {
+      // Play correct sound effect
+      if (correctSfxRef.current) {
+        correctSfxRef.current.currentTime = 0;
+        correctSfxRef.current.play().catch(() => {});
+      }
+      
+      const added = 10 + (stats.streak * 2);
+      setPopScore({ id: Date.now(), val: added });
+      setStats(prev => ({
+        ...prev,
+        score: prev.score + added,
+        correct: prev.correct + 1,
+        streak: prev.streak + 1,
+        bestStreak: Math.max(prev.bestStreak, prev.streak + 1)
+      }));
+      setTimeout(() => {
+        setPopScore(null);
+        generateRound(songPool);
+      }, 1200);
+    } else {
+      // Play wrong sound effect
+      if (wrongSfxRef.current) {
+        wrongSfxRef.current.currentTime = 0;
+        wrongSfxRef.current.play().catch(() => {});
+      }
+      
+      setStats(prev => ({ ...prev, streak: 0 }));
+      setTimeout(() => generateRound(songPool), 2000);
+    }
+  };
+
+  const saveScore = () => {
+    const name = prompt("Enter Name:") || "Anonymous";
+    const newEntry = { name, score: stats.score, date: new Date().toLocaleDateString() };
+    const updated = [...leaderboard, newEntry].sort((a, b) => b.score - a.score).slice(0, 10);
+    setLeaderboard(updated);
+    localStorage.setItem('anime_leaderboard', JSON.stringify(updated));
+    setStatus('LEADERBOARD');
+  };
+
   return (
-    <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-cyan-500 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-2xl">
-        
+    <div className="min-h-screen bg-[#020617] text-white flex flex-col items-center justify-center p-4">
+      <style jsx global>{`
+        @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; scale: 0.8; } 100% { transform: translateY(-60px); opacity: 0; scale: 1.2; } }
+        .animate-float { animation: floatUp 0.8s ease-out forwards; }
+        input[type='range'] { accent-color: #06b6d4; }
+      `}</style>
+
+      {/* Main Audio (Opening Song) */}
+      <audio ref={audioRef} key={currentRound?.correct.audioUrl} autoPlay loop>
+        <source src={currentRound?.correct.audioUrl} type="video/webm" />
+      </audio>
+
+      {/* Sound Effects */}
+      <audio ref={correctSfxRef}>
+        <source src="/sound/correct.mp3" type="audio/mpeg" />
+      </audio>
+      <audio ref={wrongSfxRef}>
+        <source src="/sound/wrong.mp3" type="audio/mpeg" />
+      </audio>
+
+      <div className="w-full max-w-md">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-6 relative">
           <div className="flex items-center gap-2">
-            <Music className="text-cyan-400" />
-            <h1 className="text-xl font-black uppercase tracking-widest">Anime OP Guess</h1>
-          </div>
-          {status === 'PLAYING' && (
-            <div className="flex items-center gap-4 bg-slate-900 px-4 py-2 rounded-full border border-slate-800">
-              <Clock className={timeLeft < 30 ? 'text-red-500 animate-pulse' : 'text-cyan-400'} />
-              <span className="font-mono text-xl">{Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</span>
+            <div className="p-2 bg-cyan-600 rounded-xl shadow-lg">
+              <Music size={20} className="text-white"/>
             </div>
-          )}
+            <h1 className="font-black italic text-xl tracking-tighter uppercase">OP Quest</h1>
+          </div>
+          <div className="text-right">
+            {popScore && <span key={popScore.id} className="absolute -top-8 right-0 text-green-400 font-black text-2xl animate-float">+{popScore.val}</span>}
+            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Score</p>
+            <p className="text-2xl font-black">{stats.score}</p>
+          </div>
         </div>
 
-        {/* Menu */}
+        {/* MENU SCREEN */}
         {status === 'MENU' && (
-          <div className="text-center bg-slate-900 border border-slate-800 p-12 rounded-3xl shadow-2xl">
-            <Trophy className="w-20 h-20 text-yellow-500 mx-auto mb-6" />
-            <h2 className="text-4xl font-black mb-4">Are you a True Fans?</h2>
-            <p className="text-slate-400 mb-8">Guess 50 iconic openings in 3 minutes.</p>
-            <button 
-              onClick={startGame}
-              className="w-full py-4 bg-cyan-500 hover:bg-cyan-400 text-black font-black rounded-xl transition-transform hover:scale-105"
-            >
-              START QUEST
+          <div className="bg-slate-900/80 border border-slate-800 p-10 rounded-[2.5rem] text-center backdrop-blur-md">
+            <Trophy size={60} className="mx-auto text-yellow-500 mb-6" />
+            <h2 className="text-2xl font-black mb-6 tracking-tight">ANIME OPENING QUIZ</h2>
+            <button onClick={startGame} className="w-full py-5 bg-cyan-500 text-black font-black rounded-2xl hover:bg-cyan-400 transition-all uppercase tracking-widest shadow-xl shadow-cyan-500/20">
+              Start Game
             </button>
+            <button onClick={() => setStatus('LEADERBOARD')} className="mt-6 text-slate-500 text-xs font-black uppercase hover:text-white transition-colors">Leaderboard</button>
           </div>
         )}
 
-        {/* Game UI */}
+        {/* PLAYING SCREEN */}
         {status === 'PLAYING' && currentRound && (
-          <div className="space-y-6">
-            <div className="bg-slate-900 p-1 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
-              <iframe
-                title="Spotify"
-                src={`https://open.spotify.com/embed/track/${currentRound.correct.spotifyId}?utm_source=generator&theme=0`}
-                width="100%"
-                height="152"
-                frameBorder="0"
-                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                className="rounded-xl"
-              />
+          <div className="space-y-4 animate-in fade-in duration-300">
+            {/* Timer & Streak */}
+            <div className="flex justify-between px-2 text-[11px] font-black uppercase">
+              <div className="flex items-center gap-2 bg-slate-900/80 px-4 py-2 rounded-full border border-slate-800">
+                <Clock size={14} className={timeLeft < 10 ? 'text-red-500 animate-pulse' : 'text-cyan-400'}/> 
+                <span className={timeLeft < 10 ? 'text-red-500' : ''}>{timeLeft}s</span>
+              </div>
+              <div className="flex items-center gap-2 bg-orange-500/10 px-4 py-2 rounded-full border border-orange-500/20">
+                <Zap size={14} className="text-orange-500 fill-orange-500"/> 
+                <span className="text-orange-500">{stats.streak}x Combo</span>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3">
+            {/* Image Display Area */}
+            <div
+  className={`relative bg-slate-950 aspect-video rounded-[2rem] border-2 overflow-hidden flex items-center justify-center transition-all duration-500
+  ${selectedId === currentRound.correct.id
+    ? 'border-green-500 ring-4 ring-green-500/20'
+    : 'border-slate-800'}`}
+>
+  {selectedId === null ? (
+    imageError ? (
+      // React fallback (SAFE)
+      <div className="w-full h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <Image size={48} className="text-slate-600" />
+      </div>
+    ) : (
+      <img
+        src="/images/placeholder.png"
+        className="w-full h-full object-cover"
+        alt="Placeholder"
+        onError={() => setImageError(true)}
+      />
+    )
+  ) : (
+    <img
+      src={currentRound.correct.imageUrl}
+      className="w-full h-full object-cover transition-all duration-700 animate-in fade-in"
+      alt={currentRound.correct.name}
+      onError={() => setImageError(true)}
+    />
+  )}
+</div>
+
+
+            {/* Volume Control */}
+            <div className="flex items-center gap-4 bg-slate-900/50 p-4 rounded-2xl border border-slate-800/50">
+              <button onClick={() => setIsMuted(!isMuted)} className="text-cyan-400">
+                {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+              </button>
+              <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => setVolume(parseFloat(e.target.value))} className="flex-1 h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+            </div>
+
+            {/* Answer Choices */}
+            <div className="grid gap-3">
               {currentRound.choices.map((choice) => (
                 <button
                   key={choice.id}
                   onClick={() => handleAnswer(choice.id)}
-                  className={`p-4 text-left rounded-xl border-2 font-bold transition-all
-                    ${selectedId === choice.id 
-                      ? (choice.id === currentRound.correct.id ? 'border-green-500 bg-green-500/10' : 'border-red-500 bg-red-500/10')
-                      : 'border-slate-800 bg-slate-900 hover:border-cyan-500'}
-                  `}
+                  disabled={selectedId !== null}
+                  className={`w-full p-5 rounded-2xl border-2 font-black transition-all text-left ${
+                    selectedId === choice.id 
+                      ? (choice.id === currentRound.correct.id ? 'border-green-500 bg-green-500/20 text-green-400' : 'border-red-500 bg-red-500/20 text-red-400')
+                      : (selectedId !== null && choice.id === currentRound.correct.id)
+                        ? 'border-green-500/50 text-green-500/50'
+                        : 'border-slate-800 bg-slate-900/40 hover:border-slate-600 hover:bg-slate-800'
+                  }`}
                 >
                   {choice.name}
                 </button>
               ))}
             </div>
-
-            {stats.streak > 2 && (
-              <div className="flex justify-center animate-bounce">
-                <div className="bg-orange-500 text-black text-xs font-black px-3 py-1 rounded-full flex items-center gap-1">
-                  <Zap size={14} fill="currentColor" /> {stats.streak} STREAK
-                </div>
-              </div>
-            )}
           </div>
         )}
 
-        {/* Results */}
+        {/* FINISHED SCREEN */}
         {status === 'FINISHED' && (
-          <div className="bg-slate-900 p-10 rounded-3xl border border-slate-800 text-center">
-            <h2 className="text-3xl font-black text-cyan-400 mb-2">TIME EXPIRED!</h2>
-            <div className="text-7xl font-black mb-6">{stats.score}</div>
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              <div className="bg-slate-950 p-4 rounded-xl">
-                <p className="text-xs text-slate-500 uppercase">Correct</p>
-                <p className="text-xl font-bold">{stats.correct}</p>
-              </div>
-              <div className="bg-slate-950 p-4 rounded-xl">
-                <p className="text-xs text-slate-500 uppercase">Best Streak</p>
-                <p className="text-xl font-bold">{stats.bestStreak}</p>
-              </div>
+          <div className="bg-slate-900 border border-slate-800 p-10 rounded-[2.5rem] text-center shadow-2xl">
+            <p className="text-slate-500 font-black uppercase text-xs mb-2">Final Score</p>
+            <h2 className="text-8xl font-black mb-10 text-cyan-400">{stats.score}</h2>
+            <div className="flex gap-3">
+              <button onClick={saveScore} className="flex-1 py-5 bg-white text-black font-black rounded-2xl hover:bg-slate-200 transition-all uppercase tracking-widest">Save Rank</button>
+              <button onClick={startGame} className="px-8 bg-slate-800 rounded-2xl border border-slate-700 hover:bg-slate-700"><RotateCcw size={24}/></button>
             </div>
-            <button 
-              onClick={startGame}
-              className="flex items-center gap-2 mx-auto px-8 py-3 bg-white text-black font-bold rounded-full hover:bg-slate-200"
-            >
-              <RotateCcw size={20} /> TRY AGAIN
-            </button>
+          </div>
+        )}
+
+        {/* LEADERBOARD SCREEN */}
+        {status === 'LEADERBOARD' && (
+          <div className="bg-slate-900 border border-slate-800 p-8 rounded-[2.5rem]">
+             <div className="flex items-center gap-2 mb-6">
+                <ListOrdered size={20} className="text-cyan-500" />
+                <h2 className="text-xl font-black uppercase">Leaderboard</h2>
+             </div>
+             <div className="space-y-3 mb-8">
+                {leaderboard.length === 0 ? (
+                  <p className="text-center text-slate-500 py-8">No scores yet. Be the first!</p>
+                ) : (
+                  leaderboard.map((entry, i) => (
+                    <div key={i} className="flex justify-between items-center p-4 bg-slate-950/50 rounded-xl border border-slate-800/50">
+                      <span className="font-bold text-slate-300">{i + 1}. {entry.name}</span>
+                      <span className="font-black text-cyan-400">{entry.score}</span>
+                    </div>
+                  ))
+                )}
+             </div>
+             <button onClick={() => setStatus('MENU')} className="w-full py-4 bg-slate-800 rounded-xl font-bold hover:bg-slate-700 transition-colors">Back to Menu</button>
           </div>
         )}
       </div>
