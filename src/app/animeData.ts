@@ -1,0 +1,60 @@
+// src/app/animeData.ts
+export interface Anime {
+  id: number;
+  name: string;
+  audioUrl: string;
+  imageUrl: string;
+}
+
+export const ANIME_DATABASE: Anime[] = [
+  { id: 1, name: "Attack on Titan", audioUrl: "https://v.animethemes.moe/ShingekiNoKyojin-OP1.webm", imageUrl: "/images/anime-1.jpg" },
+  { id: 2, name: "Demon Slayer", audioUrl: "https://v.animethemes.moe/KimetsuNoYaiba-OP1.webm", imageUrl: "/images/anime-2.jpg" },
+  { id: 3, name: "Jujutsu Kaisen", audioUrl: "https://v.animethemes.moe/JujutsuKaisen-OP1.webm", imageUrl: "/images/anime-3.jpg" },
+  { id: 4, name: "One Piece", audioUrl: "https://v.animethemes.moe/OnePiece-OP1.webm", imageUrl: "/images/anime-4.jpg" },
+  { id: 5, name: "Naruto Shippuden", audioUrl: "https://v.animethemes.moe/NarutoShippuden-OP6.webm", imageUrl: "/images/anime-5.jpg" },
+  { id: 6, name: "Tokyo Ghoul", audioUrl: "https://v.animethemes.moe/TokyoGhoul-OP1.webm", imageUrl: "/images/anime-6.jpg" },
+  { id: 7, name: "Fullmetal Alchemist: B", audioUrl: "https://v.animethemes.moe/FullmetalAlchemistBrotherhood-OP1.webm", imageUrl: "/images/anime-7.jpg" },
+  { id: 8, name: "Neon Genesis Evangelion", audioUrl: "https://v.animethemes.moe/NeonGenesisEvangelion-OP1.webm", imageUrl: "/images/anime-8.jpg" },
+  { id: 9, name: "Oshi No Ko", audioUrl: "https://v.animethemes.moe/OshiNoKo-OP1.webm", imageUrl: "/images/anime-9.jpg" },
+  { id: 10, name: "Chainsaw Man", audioUrl: "https://v.animethemes.moe/ChainsawMan-OP1.webm", imageUrl: "/images/anime-10.jpg" },
+  { id: 11, name: "Blue Lock", audioUrl: "https://v.animethemes.moe/BlueLock-OP1.webm", imageUrl: "/images/anime-11.jpg" },
+  { id: 12, name: "Spy x Family", audioUrl: "https://v.animethemes.moe/SpyXFamily-OP1.webm", imageUrl: "/images/anime-12.jpg" },
+  { id: 13, name: "Cyberpunk Edgerunners", audioUrl: "https://v.animethemes.moe/CyberpunkEdgerunners-OP1.webm", imageUrl: "/images/anime-13.jpg" },
+  { id: 14, name: "Death Note", audioUrl: "https://v.animethemes.moe/DeathNote-OP1.webm", imageUrl: "/images/anime-14.jpg" },
+  { id: 15, name: "Hunter x Hunter (2011)", audioUrl: "https://v.animethemes.moe/HunterHunter2011-OP1.webm", imageUrl: "/images/anime-15.jpg" },
+  { id: 16, name: "Bleach", audioUrl: "https://v.animethemes.moe/Bleach-OP1.webm", imageUrl: "/images/anime-16.jpg" },
+  { id: 17, name: "My Hero Academia", audioUrl: "https://v.animethemes.moe/BokuNoHeroAcademia-OP1.webm", imageUrl: "/images/anime-17.jpg" },
+  { id: 18, name: "Black Clover", audioUrl: "https://v.animethemes.moe/BlackClover-OP1.webm", imageUrl: "/images/anime-18.jpg" },
+  { id: 19, name: "Vinland Saga", audioUrl: "https://v.animethemes.moe/VinlandSaga-OP1.webm", imageUrl: "/images/anime-19.jpg" },
+  { id: 20, name: "Haikyuu!!", audioUrl: "https://v.animethemes.moe/Haikyuu-OP1.webm", imageUrl: "/images/anime-20.jpg" },
+  { id: 21, name: "Solo Leveling", audioUrl: "https://v.animethemes.moe/SoloLeveling-OP1.webm", imageUrl: "/images/anime-21.jpg" },
+  { id: 22, name: "Sword Art Online", audioUrl: "https://v.animethemes.moe/SwordArtOnline-OP1.webm", imageUrl: "/images/anime-22.jpg" },
+  { id: 23, name: "One Punch Man", audioUrl: "https://v.animethemes.moe/OnePunchMan-OP1.webm", imageUrl: "/images/anime-23.jpg" },
+  { id: 24, name: "Mob Psycho 100", audioUrl: "https://v.animethemes.moe/MobPsycho100-OP1.webm", imageUrl: "/images/anime-24.jpg" },
+  { id: 25, name: "Steins;Gate", audioUrl: "https://v.animethemes.moe/SteinsGate-OP1.webm", imageUrl: "/images/anime-25.jpg" },
+  { id: 26, name: "Code Geass", audioUrl: "https://v.animethemes.moe/CodeGeass-OP1.webm", imageUrl: "/images/anime-26.jpg" },
+  { id: 27, name: "Cowboy Bebop", audioUrl: "https://v.animethemes.moe/CowboyBebop-OP1.webm", imageUrl: "/images/anime-27.jpg" },
+  { id: 28, name: "Dr. Stone", audioUrl: "https://v.animethemes.moe/DrStone-OP1.webm", imageUrl: "/images/anime-28.jpg" },
+  { id: 29, name: "Fire Force", audioUrl: "https://v.animethemes.moe/EnenNoShoubouitai-OP1.webm", imageUrl: "/images/anime-29.jpg" },
+  { id: 30, name: "Fate/Zero", audioUrl: "https://v.animethemes.moe/FateZero-OP1.webm", imageUrl: "/images/anime-30.jpg" },
+  { id: 31, name: "Frieren", audioUrl: "https://v.animethemes.moe/SousouNoFrieren-OP1.webm", imageUrl: "/images/anime-31.jpg" },
+  { id: 32, name: "Mushoku Tensei", audioUrl: "https://v.animethemes.moe/MushokuTensei-OP1.webm", imageUrl: "/images/anime-32.jpg" },
+  { id: 33, name: "Re:Zero", audioUrl: "https://v.animethemes.moe/ReZero-OP1.webm", imageUrl: "/images/anime-33.jpg" },
+  { id: 34, name: "Kaguya-sama", audioUrl: "https://v.animethemes.moe/KaguyaSamaWaKokurasetai-OP1.webm", imageUrl: "/images/anime-34.jpg" },
+  { id: 35, name: "Your Lie in April", audioUrl: "https://v.animethemes.moe/ShigatsuWaKimiNoUso-OP1.webm", imageUrl: "/images/anime-35.jpg" },
+  { id: 36, name: "A Silent Voice", audioUrl: "https://v.animethemes.moe/KoeNoKatachi-OP1.webm", imageUrl: "/images/anime-36.jpg" },
+  { id: 37, name: "No Game No Life", audioUrl: "https://v.animethemes.moe/NoGameNoLife-OP1.webm", imageUrl: "/images/anime-37.jpg" },
+  { id: 38, name: "Parasyte", audioUrl: "https://v.animethemes.moe/Kiseijuu-OP1.webm", imageUrl: "/images/anime-38.jpg" },
+  { id: 39, name: "Kill la Kill", audioUrl: "https://v.animethemes.moe/KillLaKill-OP1.webm", imageUrl: "/images/anime-39.jpg" },
+  { id: 40, name: "Gurren Lagann", audioUrl: "https://v.animethemes.moe/TengenToppaGurrenLagann-OP1.webm", imageUrl: "/images/anime-40.jpg" },
+  { id: 41, name: "Violet Evergarden", audioUrl: "https://v.animethemes.moe/VioletEvergarden-OP1.webm", imageUrl: "/images/anime-41.jpg" },
+  { id: 42, name: "JoJo Part 1", audioUrl: "https://v.animethemes.moe/JojoNoKimyouNaBouken-OP1.webm", imageUrl: "/images/anime-42.jpg" },
+  { id: 43, name: "Shield Hero", audioUrl: "https://v.animethemes.moe/TateNoYuushaNoNariagari-OP1.webm", imageUrl: "/images/anime-43.jpg" },
+  { id: 44, name: "Dororo", audioUrl: "https://v.animethemes.moe/Dororo-OP1.webm", imageUrl: "/images/anime-44.jpg" },
+  { id: 45, name: "Noragami", audioUrl: "https://v.animethemes.moe/Noragami-OP1.webm", imageUrl: "/images/anime-45.jpg" },
+  { id: 46, name: "Hellsing Ultimate", audioUrl: "https://v.animethemes.moe/HellsingUltimate-OP1.webm", imageUrl: "/images/anime-46.jpg" },
+  { id: 47, name: "Psycho-Pass", audioUrl: "https://v.animethemes.moe/PsychoPass-OP1.webm", imageUrl: "/images/anime-47.jpg" },
+  { id: 48, name: "Samurai Champloo", audioUrl: "https://v.animethemes.moe/SamuraiChamploo-OP1.webm", imageUrl: "/images/anime-48.jpg" },
+  { id: 49, name: "Gintama", audioUrl: "https://v.animethemes.moe/Gintama-OP1.webm", imageUrl: "/images/anime-49.jpg" },
+  { id: 50, name: "Great Teacher Onizuka", audioUrl: "https://v.animethemes.moe/GTO-OP1.webm", imageUrl: "/images/anime-50.jpg" }
+];
